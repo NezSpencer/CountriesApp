@@ -3,9 +3,7 @@ package com.nezspencer.countriesapp;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
-import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import com.nezspencer.countriesapp.databinding.ItemCountryBinding;
 
@@ -43,6 +41,11 @@ public class CountriesRecyclerAdapter extends RecyclerView.Adapter<CountriesRecy
         countries.clear();
         countries.addAll(countryArrayList);
         notifyDataSetChanged();
+    }
+
+    public void deleteCountry(int position) {
+        countries.remove(position);
+        notifyItemRemoved(position);
     }
 
     class Holder extends RecyclerView.ViewHolder{

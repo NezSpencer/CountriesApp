@@ -3,21 +3,16 @@ package com.nezspencer.countriesapp;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Log;
-import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLConnection;
 import java.util.ArrayList;
 
 public class Api {
@@ -88,9 +83,12 @@ public class Api {
             //get currency
             JSONObject currency0 = countryObject.getJSONArray("currencies").getJSONObject
                     (0);
-            country.setCurrency(currency0.getString("name").concat(" ( ")
-                    .concat(currency0.getString("symbol").concat(" )")));
+            String currency = currency0.getString("name");
+            String currencySymbol = currency0.getString("symbol");
+            if (!TextUtils.isEmpty(currencySymbol) && !currencySymbol.equalsIgnoreCase("null"))
+                currency = currency.concat(" ( ").concat(currencySymbol).concat(" ) ");
 
+            country.setCurrency(currency);
             //set to list
             countries.add(country);
         }

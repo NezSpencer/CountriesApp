@@ -8,17 +8,30 @@
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:fitsSystemWindows="true"
         tools:context=".CountryActivity">
 
-        <android.support.v7.widget.RecyclerView
-            android:id="@+id/rv_countries_list"
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:background="?attr/colorPrimary"
             android:layout_width="match_parent"
-            app:layoutManager="android.support.v7.widget.LinearLayoutManager"
-            android:orientation="vertical"
-            android:background="@color/app_white"
-            android:layout_margin="@dimen/inter_block_margin"
-            tools:listitem="@layout/item_country"
-            android:layout_height="match_parent"/>
+            android:layout_height="?attr/actionBarSize" />
+
+        <android.support.v4.widget.SwipeRefreshLayout
+            android:id="@+id/srl_country"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/rv_countries_list"
+                android:layout_width="match_parent"
+                app:layoutManager="android.support.v7.widget.LinearLayoutManager"
+                android:orientation="vertical"
+                android:background="@color/app_white"
+                android:layout_margin="@dimen/inter_block_margin"
+                tools:listitem="@layout/item_country"
+                android:layout_height="match_parent" />
+        </android.support.v4.widget.SwipeRefreshLayout>
 
     </LinearLayout>
 </layout>
