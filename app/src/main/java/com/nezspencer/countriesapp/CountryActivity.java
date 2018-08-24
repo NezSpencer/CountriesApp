@@ -1,6 +1,5 @@
 package com.nezspencer.countriesapp;
 
-import android.app.ProgressDialog;
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.databinding.DataBindingUtil;
@@ -18,7 +17,9 @@ import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
+import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
 import com.nezspencer.countriesapp.databinding.ActivityCountryBinding;
 
@@ -26,11 +27,12 @@ import java.util.ArrayList;
 
 public class CountryActivity extends AppCompatActivity {
 
-    private ProgressDialog dialog;
-    private ArrayList<Country> countries;
+
     public static final String REQUEST_URL = "https://restcountries.eu/rest/v2/all";
+    public static final String COLOR_CODE_PURPLE = "#5E35B1";
     private CountriesRecyclerAdapter adapter;
     private ActivityCountryBinding binding;
+    public static final String TAG = CountryActivity.class.getName();
 
     public static final float ANCHOR_MEASURED_FROM_RIGHT = 0.4f;
     public static final float ANCHOR_MEASURED_FROM_LEFT = 0.6f;
@@ -40,18 +42,18 @@ public class CountryActivity extends AppCompatActivity {
 
         Drawable background;
         Drawable deleteIcon;
-        int xMarkMargin;
         boolean initiated;
 
         private void init() {
-            background = new ColorDrawable(Color.parseColor("#5E35B1"));
+            background = new ColorDrawable(Color.parseColor(COLOR_CODE_PURPLE));
             deleteIcon = ContextCompat.getDrawable(CountryActivity.this, R.drawable.ic_delete);
             if (deleteIcon != null)
                 deleteIcon.setColorFilter(Color.WHITE, PorterDuff.Mode.SRC_ATOP);
         }
 
         @Override
-        public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
+        public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder,
+                              RecyclerView.ViewHolder target) {
             return false;
         }
 
@@ -61,10 +63,10 @@ public class CountryActivity extends AppCompatActivity {
         }
 
         @Override
-        public void onChildDraw(Canvas c, RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive) {
+        public void onChildDraw(Canvas c, RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder,
+                                float dX, float dY, int actionState, boolean isCurrentlyActive) {
             View itemView = viewHolder.itemView;
-            if (viewHolder.getAdapterPosition() == -1) {
-                // not interested in those
+            if (viewHolder.getAdapterPosition() < 0) {
                 return;
             }
 
@@ -73,7 +75,8 @@ public class CountryActivity extends AppCompatActivity {
             }
 
             // draw purple background
-            background.setBounds(itemView.getRight() + (int) dX, itemView.getTop(), itemView.getRight(), itemView.getBottom());
+            background.setBounds(itemView.getRight() + (int) dX, itemView.getTop(),
+                    itemView.getRight(), itemView.getBottom());
             background.draw(c);
 
             // draw bomb icon
@@ -92,38 +95,35 @@ public class CountryActivity extends AppCompatActivity {
             super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
         }
 
-        @Override
-        public void onChildDrawOver(Canvas c, RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive) {
-            super.onChildDrawOver(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
-        }
 
         @Override
         public float getSwipeThreshold(RecyclerView.ViewHolder viewHolder) {
             return ANCHOR_MEASURED_FROM_RIGHT;
         }
     };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         binding = DataBindingUtil.setContentView(this, R.layout
                 .activity_country);
-        countries = new ArrayList<>();
-        dialog = new ProgressDialog(this);
-        dialog.setMessage("Please wait loading...");
-        dialog.setCancelable(false);
-        dialog.setCanceledOnTouchOutside(false);
 
-        adapter = new CountriesRecyclerAdapter(countries);
+        setSupportActionBar(binding.toolbar);
+        ArrayList<Country> countries = new ArrayList<>();
+
+        adapter = new CountriesRecyclerAdapter(this, countries);
         binding.rvCountriesList.addItemDecoration(new DividerItemDecoration(this,
                 LinearLayoutManager.VERTICAL));
         binding.rvCountriesList.setAdapter(adapter);
-        final CountriesViewModel viewModel = ViewModelProviders.of(this).get(CountriesViewModel.class);
+
+        final CountriesViewModel viewModel = ViewModelProviders.of(this, new
+                CountryViewModelFactory(REQUEST_URL)).get
+                (CountriesViewModel.class);
+
         viewModel.getCountriesLiveData().observe(this, new Observer<ArrayList<Country>>() {
             @Override
             public void onChanged(@Nullable ArrayList<Country> countries) {
-                if (countries == null)
-                    viewModel.fetchCountries(REQUEST_URL);
-                else
+                if (countries != null)
                     adapter.refreshList(countries);
             }
         });
@@ -133,13 +133,20 @@ public class CountryActivity extends AppCompatActivity {
             public void onChanged(@Nullable Status status) {
                 if (status == null)
                     return;
+                if (status.errorMessage != null) {
+                    //request failed; log error and inform user to retry
+                    Toast.makeText(CountryActivity.this, "Request failed, please reload",
+                            Toast.LENGTH_SHORT).show();
+                    Log.d(TAG, status.errorMessage);
+                    dismissProgress();
+                }
+
                 if (status.resultCode == Code.SUCCESS) {
-                    // you can fetch data
-                    dismissDialog();
+                    dismissProgress();
 
                 }
                 else if (status.resultCode == Code.LOADING) {
-                    showDialog();
+                    showProgress();
                 }
             }
         });
@@ -147,7 +154,7 @@ public class CountryActivity extends AppCompatActivity {
         binding.srlCountry.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                viewModel.fetchCountries(REQUEST_URL);
+                viewModel.fetchCountries();
             }
         });
 
@@ -155,16 +162,12 @@ public class CountryActivity extends AppCompatActivity {
         mItemTouchHelper.attachToRecyclerView(binding.rvCountriesList);
     }
 
-    private void showDialog(){
-        if (dialog != null && !dialog.isShowing())
-            dialog.show();
+    private void showProgress() {
         if (!binding.srlCountry.isRefreshing())
             binding.srlCountry.setRefreshing(true);
     }
 
-    private void dismissDialog() {
-        if (dialog != null && dialog.isShowing())
-            dialog.dismiss();
+    private void dismissProgress() {
         if (binding.srlCountry.isRefreshing())
             binding.srlCountry.setRefreshing(false);
     }

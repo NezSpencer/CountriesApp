@@ -9,14 +9,20 @@ import java.util.ArrayList;
 public class CountriesViewModel extends ViewModel implements CountriesRequestListener {
 
     private Api api;
+    private String requestUrl;
+
+    public CountriesViewModel(@NonNull String url) {
+        requestUrl = url;
+        fetchCountries();
+    }
 
     private final MutableLiveData<Status> networkStatusLiveData = new MutableLiveData<>();
     private final MutableLiveData<ArrayList<Country>> countriesLiveData = new MutableLiveData<>();
 
-    public void fetchCountries(@NonNull String url) {
+    public void fetchCountries() {
         api = new Api(this);
         networkStatusLiveData.setValue(Status.LOADING);
-        api.getCountries(url);
+        api.getCountries(requestUrl);
     }
 
     @Override
