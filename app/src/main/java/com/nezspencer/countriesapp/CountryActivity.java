@@ -30,7 +30,7 @@ public class CountryActivity extends AppCompatActivity {
     private ActivityCountryBinding binding;
     public static final String TAG = CountryActivity.class.getName();
 
-    public static final float ANCHOR_MEASURED_FROM_RIGHT = 0.4f;
+    public static final float ANCHOR_MEASURED_FROM_RIGHT = 0.7f;
 
     private ItemTouchHelper.SimpleCallback touchHelper = new ItemTouchHelper.SimpleCallback(0,
             ItemTouchHelper.LEFT) {
