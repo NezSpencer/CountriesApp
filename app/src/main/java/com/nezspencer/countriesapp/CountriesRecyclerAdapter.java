@@ -18,6 +18,7 @@ public class CountriesRecyclerAdapter extends RecyclerView.Adapter<CountriesRecy
     private ArrayList<Country> countries;
     private Context context;
     private int lastPosition = -1;
+    private Holder holder;
 
     public CountriesRecyclerAdapter(@NonNull Context context, @NonNull ArrayList<Country> countries) {
         this.countries = countries;
@@ -34,11 +35,13 @@ public class CountriesRecyclerAdapter extends RecyclerView.Adapter<CountriesRecy
 
     @Override
     public void onBindViewHolder(@NonNull Holder holder, int position) {
+        holder.shouldStopAtAnchor = false;
         Country country = countries.get(holder.getAdapterPosition());
         holder.binding.tvCountryName.setText(country.getName());
         holder.binding.tvCountryLanguage.setText(country.getLanguage());
         holder.binding.tvCountryCurrency.setText(country.getCurrency());
         setEnterAnimation(holder.itemView, holder.getAdapterPosition());
+        this.holder = holder;
     }
 
     @Override
@@ -55,6 +58,10 @@ public class CountriesRecyclerAdapter extends RecyclerView.Adapter<CountriesRecy
         }
     }
 
+    public RecyclerView.ViewHolder getCurrentViewHolder() {
+        return holder;
+    }
+
     public void refreshList(@NonNull ArrayList<Country> countryArrayList) {
         countries.clear();
         countries.addAll(countryArrayList);
@@ -68,10 +75,25 @@ public class CountriesRecyclerAdapter extends RecyclerView.Adapter<CountriesRecy
 
     class Holder extends RecyclerView.ViewHolder{
         ItemCountryBinding binding;
+        boolean shouldStopAtAnchor = false;
+
         public Holder(ItemCountryBinding binding) {
             super(binding.getRoot());
             this.binding = binding;
 
+        }
+
+
+        public View getViewToSwipe() {
+            return binding.viewToSwipe;
+        }
+
+        public View getViewToAnimate() {
+            return binding.itemFrame;
+        }
+
+        public int getImageViewWidth() {
+            return binding.ivDeleteIcon.getMaxWidth();
         }
     }
 }

@@ -4,4 +4,5 @@
     <dimen name="inter_view_margin">8dp</dimen>
     <dimen name="small_elevation">2dp</dimen>
     <dimen name="inter_block_margin">16dp</dimen>
+    <dimen name="icon_size">50dp</dimen>
 </resources>
